@@ -15,6 +15,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var db_1 = __importDefault(require("../env/db"));
+var logger_1 = __importDefault(require("../env/logger"));
 var UserController = /** @class */ (function () {
     function UserController() {
     }
@@ -22,8 +23,10 @@ var UserController = /** @class */ (function () {
         return new Promise(function (resolve, reject) {
             var sqlQuery = 'SELECT * FROM users WHERE username = ?';
             db_1.default(sqlQuery, [username], function (error, rows) {
-                if (error)
+                if (error) {
+                    logger_1.default.error(error);
                     return reject(error);
+                }
                 else if (rows.length > 0)
                     resolve(__assign({}, rows[0]));
                 else if (rows.length === 0)

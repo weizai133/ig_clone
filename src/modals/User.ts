@@ -5,10 +5,28 @@ export default interface User {
   updated_at?: string | null
 }
 
-interface findUserBody {
+interface FindUserBody {
   username: string
 }
 
+interface NumOfPosts {
+  num_of_posts: number
+}
+
+interface NumOfFollowers {
+  num_of_followers: number
+}
+
+interface NumOfFollowings {
+  num_of_followings: number
+}
+
+interface UserInfo extends NumOfPosts, NumOfFollowers, NumOfFollowings {}
+
 export {
-  findUserBody
+  FindUserBody,
+  UserInfo,
+  NumOfPosts,
+  NumOfFollowers,
+  NumOfFollowings
 }

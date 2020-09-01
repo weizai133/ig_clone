@@ -1,15 +1,19 @@
 import { Router, Request, Response, IRouter } from "express";
-import User from "../controllers/user";
+import UserController from "../controllers/userController";
 
 const router: IRouter = Router();
-const user = new User();
-
+const userController = new UserController();
 
 router.post('/checkUsername', (req: Request, res: Response) => {
-  user.find(req.body.username)
-  .then(result => {
-    res.status(200).json({ success: true, result })
-  })
+  userController.find(req.body.username)
+  .then(result => { return res.status(200).json({ success: true, result })})
+  .catch(error => { return res.status(500).json({ success: false, error })});
+})
+
+router.get('/fetchUserProfile/:userId', (req: Request, res: Response) => {
+  userController.userProfile(req.params.userId)
+  .then(result => { return res.status(200).json({ success: true, result })})
+  .catch(error => { return res.status(500).json({ success: false, error })});
 })
 
 module.exports = router;
