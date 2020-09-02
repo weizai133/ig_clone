@@ -18,4 +18,10 @@ router.get('/fetchUserPosts/:userId', (req: Request, res: Response) => {
   .catch(error => { return res.status(500).json({ success: false, error })});
 })
 
+router.get('/fetchCommentsByPostId/:postId', (req: Request, res: Response) => {
+  postsController.fetchCommentsByPostId(req.params.postId as string, req.query.pageNo as pageMeta, req.query.pageSize as pageMeta)
+  .then(result => { return res.status(200).json({ success: true, result })})
+  .catch(error => { return res.status(500).json({ success: false, error })});
+})
+
 module.exports = router;

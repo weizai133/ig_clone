@@ -3,10 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var winston_1 = __importDefault(require("winston"));
-var format = winston_1.default.format;
-var combine = format.combine, timestamp = format.timestamp, colorize = format.colorize;
-var logger = winston_1.default.createLogger({
+const winston_1 = __importDefault(require("winston"));
+const { format } = winston_1.default;
+const { combine, timestamp, colorize } = format;
+const logger = winston_1.default.createLogger({
     level: 'info',
     format: combine(colorize(), timestamp(), format.simple()),
     transports: [
