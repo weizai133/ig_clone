@@ -22,4 +22,6 @@ router.get('/fetchCommentsByPostId/:postId', (req, res) => {
         .then(result => { return res.status(200).json({ success: true, result }); })
         .catch(error => { return res.status(500).json({ success: false, error }); });
 });
+router.post('createPost', (req, res) => {
+});
 module.exports = router;

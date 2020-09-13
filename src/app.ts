@@ -18,7 +18,7 @@ app.use(morgan(function (tokens, req, res) {
     'status:', tokens.status(req, res),
     'requestBody:', JSON.stringify(req.body),
     tokens['response-time'](req, res), 'ms'
-  ].join(' ')
+  ].join(' ');
 }));
 
 app.use('/user', require('./routes/users'));

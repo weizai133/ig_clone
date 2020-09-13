@@ -1,9 +1,9 @@
-import Post, { Fetch_Posts } from "../modals/Post";
+import Post, { Fetch_Posts, PostMeta } from "../modals/Post";
 import Comment from "../modals/Comment";
 
 export default interface PostService {
   /**
-   * fetch posts
+   * fetch posts on main page
    */
   fetchPostsByUserId(id: string, pageNo?: number, pageSize?: number): Promise<Array<Fetch_Posts>>;
   /**
@@ -14,4 +14,8 @@ export default interface PostService {
    * fetch Post's Comments
    */
   fetchCommentsByPostId(id: string, pageNo?: number, pageSize?:number): Promise<Array<Comment>>
+  /**
+   * fetch meta data of a post 
+   */
+  fetchMetaByPostId(id: number): Promise<PostMeta>
 }
