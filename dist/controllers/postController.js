@@ -14,11 +14,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../env/db"));
 const logger_1 = __importDefault(require("../env/logger"));
+const redis_1 = require("../redis");
+const utils_1 = require("../utils");
 class PostController {
-    fetchPostsByUserId(id, pageNo = 0, pageSize = 10) {
+    createPost(newPost) {
         return new Promise((resolve, reject) => {
-            let sqlQuery = 'SELECT p.id as post_id, f.followee_id, users.username, p.image_url, p.created_at FROM follows f ';
-            sqlQuery += 'INNER JOIN photos p ON p.user_id = f.followee_id ';
+            let sqlQuery = 'insert into photos set ?';
+            db_1.default(sqlQuery, newPost, (err, row) => {
+                if (err)
+                    return reject(err);
+                else if (row)
+                    resolve(row.insertId);
+                else
+                    reject(null);
+            });
+        });
+    }
+    fetchPostsByUserId(id, pageNo = 0, pageSize = 20) {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            // Get memberlist from Redis first
+            const res = yield redis_1.lrange(`${id}_membersList`, 0, 20);
+            if (res && res.length >= 0) {
+                // resolve(res)
+                resolve();
+            }
+            let sqlQuery = 'SELECT f.followee_id, p.id as post_id, users.username, p.image_url, p.created_at FROM follows f ';
+            sqlQuery += 'LEFT JOIN photos p ON p.user_id = f.followee_id ';
             sqlQuery += 'LEFT JOIN users ON f.followee_id = users.id ';
             sqlQuery += 'WHERE f.follower_id = ? ';
             sqlQuery += 'ORDER BY p.created_at DESC ';
@@ -30,9 +51,8 @@ class PostController {
                 }
                 else if (rows.length >= 0) {
                     try {
-                        const metaOfPosts = yield Promise.all(rows.map((val) => this.fetchMetaByPostId(val.post_id)));
-                        const res = rows.map((val, index) => (Object.assign(Object.assign({}, val), metaOfPosts[index])));
-                        resolve(res);
+                        yield utils_1.preLoadPostsList(`${id}_membersList`, rows.map(val => ({ userId: val.followee_id, postId: val.post_id, created_at: val.created_at })));
+                        resolve(rows);
                     }
                     catch (error) {
                         logger_1.default.error(error);
@@ -42,7 +62,7 @@ class PostController {
                 else
                     reject(null);
             }));
-        });
+        }));
     }
     fetchUserPosts(id, pageNo = 0, pageSize = 10) {
         return new Promise((resolve, reject) => {

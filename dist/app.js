@@ -5,11 +5,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
-const logger_1 = __importDefault(require("./env/logger"));
-const env_1 = __importDefault(require("./env"));
 const morgan_1 = __importDefault(require("morgan"));
 const helmet_1 = __importDefault(require("helmet"));
+const logger_1 = __importDefault(require("./env/logger"));
+const env_1 = __importDefault(require("./env"));
+const redis_1 = require("./redis");
 const app = express_1.default();
+redis_1.redisClient.on('ready', () => {
+    logger_1.default.info('Redis is connected');
+});
+redis_1.redisClient.on('error', (err) => {
+    logger_1.default.error(err);
+});
 app.use(helmet_1.default());
 app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use(body_parser_1.default.json());

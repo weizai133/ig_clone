@@ -1,11 +1,20 @@
 import express, { Application } from "express";
 import bodyParser from "body-parser";
-import logger from "./env/logger";
-import config from "./env";
 import morgan from "morgan";
 import helmet from "helmet";
+import logger from "./env/logger";
+import config from "./env";
+import { redisClient } from "./redis";
 
 const app: Application = express();
+
+redisClient.on('ready', () => {
+  logger.info('Redis is connected');
+});
+
+redisClient.on('error', (err) => {
+  logger.error(err);
+})
 
 app.use(helmet());
 app.use(bodyParser.urlencoded({ extended: false }));

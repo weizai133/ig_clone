@@ -10,18 +10,21 @@ const postsController = new postController_1.default();
 router.get('/fetchPosts/:userId', (req, res) => {
     postsController.fetchPostsByUserId(req.params.userId, req.query.pageNo, req.query.pageSize)
         .then(result => { return res.status(200).json({ success: true, result }); })
-        .catch(error => { return res.status(500).json({ success: false, error }); });
+        .catch(error => { return res.status(400).json({ success: false, error }); });
 });
 router.get('/fetchUserPosts/:userId', (req, res) => {
     postsController.fetchUserPosts(req.params.userId, req.query.pageNo, req.query.pageSize)
         .then(result => { return res.status(200).json({ success: true, result }); })
-        .catch(error => { return res.status(500).json({ success: false, error }); });
+        .catch(error => { return res.status(400).json({ success: false, error }); });
 });
 router.get('/fetchCommentsByPostId/:postId', (req, res) => {
     postsController.fetchCommentsByPostId(req.params.postId, req.query.pageNo, req.query.pageSize)
         .then(result => { return res.status(200).json({ success: true, result }); })
-        .catch(error => { return res.status(500).json({ success: false, error }); });
+        .catch(error => { return res.status(400).json({ success: false, error }); });
 });
-router.post('createPost', (req, res) => {
+router.post('/createPost', (req, res) => {
+    postsController.createPost(req.body)
+        .then(result => { return res.status(200).json({ success: true, result }); })
+        .catch(error => { return res.status(400).json({ success: false, error }); });
 });
 module.exports = router;

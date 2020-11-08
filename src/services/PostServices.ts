@@ -18,4 +18,8 @@ export default interface PostService {
    * fetch meta data of a post 
    */
   fetchMetaByPostId(id: number): Promise<PostMeta>
+  /**
+   * Create Post
+   */
+  createPost(newPost: Post): Promise<number>
 }

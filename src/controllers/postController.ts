@@ -1,15 +1,37 @@
 import query from "../env/db";
 import logger from "../env/logger";
+import { InsertRow } from "../modals/Common";
 import Post, { Fetch_Posts, PostMeta, NumOfLikes, NumOfComments } from "../modals/Post";
 import Comment from "../modals/Comment";
 import PostServices from "../services/PostServices";
+import { lrange } from "../redis";
+import { preLoadPostsList } from "../utils";
 
 export default class PostController implements PostServices {
-  fetchPostsByUserId(id: string, pageNo = 0, pageSize = 10 ): Promise<Array<Fetch_Posts>> {
+  createPost(newPost: Post): Promise<number> {
     return new Promise((resolve, reject) => {
-      let sqlQuery: string = 'SELECT p.id as post_id, f.followee_id, users.username, p.image_url, p.created_at FROM follows f ';
-      sqlQuery += 'INNER JOIN photos p ON p.user_id = f.followee_id '
-      sqlQuery += 'LEFT JOIN users ON f.followee_id = users.id '
+      let sqlQuery: string = 'insert into photos set ?';
+      query(sqlQuery, newPost, (err: Error, row: InsertRow) => {
+        if (err) return reject(err)
+        else if (row) resolve(row.insertId)
+        else reject(null)
+      })
+    })
+  }
+
+  fetchPostsByUserId(id: string, pageNo = 0, pageSize = 20 ): Promise<Array<Fetch_Posts>> {
+    return new Promise(async (resolve, reject) => {
+      // Get memberlist from Redis first
+      const res = await lrange(`${id}_membersList`, 0, 20);
+      if (res && res.length > 0) {
+        console.log('Read Redis');
+        resolve(res.map(val => ({ ...JSON.parse(val) })));
+        return
+      }
+      logger.info('read Sql')
+      let sqlQuery = 'SELECT f.followee_id, p.id as post_id, users.username, p.image_url, p.created_at FROM follows f ';
+      sqlQuery += 'LEFT JOIN photos p ON p.user_id = f.followee_id ';
+      sqlQuery += 'LEFT JOIN users ON f.followee_id = users.id ';
       sqlQuery += 'WHERE f.follower_id = ? ';
       sqlQuery += 'ORDER BY p.created_at DESC ';
       sqlQuery += `LIMIT ${pageNo}, ${pageSize}`;
@@ -19,11 +41,10 @@ export default class PostController implements PostServices {
           logger.error(err);
           reject(err);
         } else if (rows.length >= 0) {
-
           try {
-            const metaOfPosts = await Promise.all(rows.map((val: Fetch_Posts) => this.fetchMetaByPostId(val.post_id)))
-            const res = rows.map((val, index) => ({ ...val, ...metaOfPosts[index] }));
-            resolve(res);
+            resolve(rows);
+            await preLoadPostsList(`${id}_membersList`, rows);
+            return;
           } catch (error) {
             logger.error(error)
             reject(error)

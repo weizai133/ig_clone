@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ig-server
+spec:
+  selector:
+    matchLabels:
+      app: ig-server
+  template:
+    metadata:
+      labels:
+        app: ig-server
+    spec:
+      containers:
+        - name: ig-server
+          image: weizai133/ig-clone:0.1
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ig-server-srv
+spec:
+  selector:
+    app: ig-server
+  ports: 
+    - name : ig-server
+      protocol: TCP
+      port: 3001
+      targetPort: 3001
