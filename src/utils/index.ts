@@ -6,7 +6,7 @@ export const preLoadPostsList = (key: string, data: Array<Fetch_Posts>): Promise
   return new Promise(async (resolve, reject) => {
     try {
       await lPush(key, data.map(val => JSON.stringify(val)));
-      redisClient.expire(key, 10000);
+      redisClient.expire(key, 30000);
       resolve() 
     } catch (error) {
       logger.error(error);

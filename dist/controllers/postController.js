@@ -34,10 +34,12 @@ class PostController {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             // Get memberlist from Redis first
             const res = yield redis_1.lrange(`${id}_membersList`, 0, 20);
-            if (res && res.length >= 0) {
-                // resolve(res)
-                resolve();
+            if (res && res.length > 0) {
+                console.log('Read Redis');
+                resolve(res.map(val => (Object.assign({}, JSON.parse(val)))));
+                return;
             }
+            logger_1.default.info('read Sql');
             let sqlQuery = 'SELECT f.followee_id, p.id as post_id, users.username, p.image_url, p.created_at FROM follows f ';
             sqlQuery += 'LEFT JOIN photos p ON p.user_id = f.followee_id ';
             sqlQuery += 'LEFT JOIN users ON f.followee_id = users.id ';
@@ -51,8 +53,9 @@ class PostController {
                 }
                 else if (rows.length >= 0) {
                     try {
-                        yield utils_1.preLoadPostsList(`${id}_membersList`, rows.map(val => ({ userId: val.followee_id, postId: val.post_id, created_at: val.created_at })));
                         resolve(rows);
+                        yield utils_1.preLoadPostsList(`${id}_membersList`, rows);
+                        return;
                     }
                     catch (error) {
                         logger_1.default.error(error);

@@ -18,9 +18,8 @@ const logger_1 = __importDefault(require("../env/logger"));
 exports.preLoadPostsList = (key, data) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            data.forEach((val) => __awaiter(void 0, void 0, void 0, function* () {
-                yield redis_1.lPush(key, JSON.stringify({ userId: val.userId, postId: val.postId, created_at: val.created_at }));
-            }));
+            yield redis_1.lPush(key, data.map(val => JSON.stringify(val)));
+            redis_1.redisClient.expire(key, 10000);
             resolve();
         }
         catch (error) {

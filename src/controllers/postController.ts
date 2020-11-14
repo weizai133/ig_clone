@@ -29,11 +29,11 @@ export default class PostController implements PostServices {
         return
       }
       logger.info('read Sql')
-      let sqlQuery = 'SELECT f.followee_id, p.id as post_id, users.username, p.image_url, p.created_at FROM follows f ';
-      sqlQuery += 'LEFT JOIN photos p ON p.user_id = f.followee_id ';
-      sqlQuery += 'LEFT JOIN users ON f.followee_id = users.id ';
-      sqlQuery += 'WHERE f.follower_id = ? ';
-      sqlQuery += 'ORDER BY p.created_at DESC ';
+      let sqlQuery = 'select u.username, p.user_id, p.id as post_id, p.created_at, p.image_url from photos p ';
+      sqlQuery += 'left join users u on u.id = p.user_id ';
+      sqlQuery += 'where p.user_id in ';
+      sqlQuery += '(select f.followee_id from follows f where follower_id = ?) ';
+      sqlQuery += 'order by p.created_at desc ';
       sqlQuery += `LIMIT ${pageNo}, ${pageSize}`;
 
       query(sqlQuery, [id], async (err: Error, rows: Array<Fetch_Posts>) => {
