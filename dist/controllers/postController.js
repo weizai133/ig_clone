@@ -32,19 +32,18 @@ class PostController {
     }
     fetchPostsByUserId(id, pageNo = 0, pageSize = 20) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            // Get memberlist from Redis first
-            const res = yield redis_1.lrange(`${id}_membersList`, 0, 20);
+            // Try to get memberlist from Redis first
+            const res = yield redis_1.lrange(`${id}_membersList`, pageNo, pageSize);
             if (res && res.length > 0) {
-                console.log('Read Redis');
+                logger_1.default.info('Read Redis');
                 resolve(res.map(val => (Object.assign({}, JSON.parse(val)))));
                 return;
             }
             logger_1.default.info('read Sql');
-            let sqlQuery = 'SELECT f.followee_id, p.id as post_id, users.username, p.image_url, p.created_at FROM follows f ';
-            sqlQuery += 'LEFT JOIN photos p ON p.user_id = f.followee_id ';
-            sqlQuery += 'LEFT JOIN users ON f.followee_id = users.id ';
-            sqlQuery += 'WHERE f.follower_id = ? ';
-            sqlQuery += 'ORDER BY p.created_at DESC ';
+            let sqlQuery = 'select u.username, p.user_id, p.id as post_id, p.created_at, p.image_url, p.content from photos p ';
+            sqlQuery += 'inner join (select followee_id from follows where follower_id = ? ) f on f.followee_id = p.user_id ';
+            sqlQuery += 'left join users u on u.id = p.user_id ';
+            sqlQuery += 'order by p.created_at desc ';
             sqlQuery += `LIMIT ${pageNo}, ${pageSize}`;
             db_1.default(sqlQuery, [id], (err, rows) => __awaiter(this, void 0, void 0, function* () {
                 if (err) {

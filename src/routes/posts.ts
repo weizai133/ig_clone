@@ -29,4 +29,4 @@ router.post('/createPost', (req: Request, res: Response) => {
   .catch(error => { return res.status(400).json({ success: false, error })});
 })
 
-module.exports = router;
+export default router;

@@ -16,4 +16,4 @@ router.get('/fetchUserProfile/:userId', (req: Request, res: Response) => {
   .catch(error => { return res.status(500).json({ success: false, error })});
 })
 
-module.exports = router;
+export default router;

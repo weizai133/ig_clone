@@ -27,4 +27,4 @@ router.post('/createPost', (req, res) => {
         .then(result => { return res.status(200).json({ success: true, result }); })
         .catch(error => { return res.status(400).json({ success: false, error }); });
 });
-module.exports = router;
+exports.default = router;

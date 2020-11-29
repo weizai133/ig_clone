@@ -21,18 +21,17 @@ export default class PostController implements PostServices {
 
   fetchPostsByUserId(id: string, pageNo = 0, pageSize = 20 ): Promise<Array<Fetch_Posts>> {
     return new Promise(async (resolve, reject) => {
-      // Get memberlist from Redis first
-      const res = await lrange(`${id}_membersList`, 0, 20);
+      // Try to get memberlist from Redis first
+      const res = await lrange(`${id}_membersList`, pageNo, pageSize);
       if (res && res.length > 0) {
-        console.log('Read Redis');
+        logger.info('Read Redis');
         resolve(res.map(val => ({ ...JSON.parse(val) })));
         return
       }
       logger.info('read Sql')
-      let sqlQuery = 'select u.username, p.user_id, p.id as post_id, p.created_at, p.image_url from photos p ';
+      let sqlQuery = 'select u.username, p.user_id, p.id as post_id, p.created_at, p.image_url, p.content from photos p ';
+      sqlQuery += 'inner join (select followee_id from follows where follower_id = ? ) f on f.followee_id = p.user_id ';
       sqlQuery += 'left join users u on u.id = p.user_id ';
-      sqlQuery += 'where p.user_id in ';
-      sqlQuery += '(select f.followee_id from follows f where follower_id = ?) ';
       sqlQuery += 'order by p.created_at desc ';
       sqlQuery += `LIMIT ${pageNo}, ${pageSize}`;
 

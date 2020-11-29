@@ -19,7 +19,7 @@ exports.preLoadPostsList = (key, data) => {
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             yield redis_1.lPush(key, data.map(val => JSON.stringify(val)));
-            redis_1.redisClient.expire(key, 10000);
+            yield redis_1.expire(key, 30000);
             resolve();
         }
         catch (error) {
