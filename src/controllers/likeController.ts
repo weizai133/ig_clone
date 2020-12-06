@@ -1,5 +1,5 @@
 import { redlock, hmset, hexists, hdel, hkeys, hget, sadd, smembers, sismember, srem } from "../redis";
-import { getConn, beginTransaction, transactionCommit } from "../env/db";
+import { getConn, beginTransaction, doTransaction, transactionCommit } from "../env/db";
 import logger from "../env/logger";
 import { LikeRawBodyRedis, CreateLikeBody } from "../modals/Like";
 import { LikeService } from "../services/LikeServices";
@@ -36,17 +36,16 @@ export class LikeController implements LikeService {
         const likesColl = await smembers(LikeCollections);
         (likesColl);
         const sql = 'insert into likes set user_id = ?, photo_id = ?, created_at = ?;'
-  
+        
+        await beginTransaction(conn);
         likesColl.forEach(async val => {
           const nestedLock = await redlock.lock(`lock:${val}`, 1500);
           const likeItemsFromRedis = await hkeys(val);
-
           likeItemsFromRedis.map(async el => { 
                               const item = await hget(val, el);
                               let temp = JSON.parse(item) as LikeRawBodyRedis;
-                              await beginTransaction(conn, sql, [temp.user_id, temp.photo_id, temp.created_at]);
+                              await doTransaction(conn, sql, [temp.user_id, temp.photo_id, temp.created_at]);
                             });
-
           await nestedLock.unlock();
         });
         await transactionCommit(conn);

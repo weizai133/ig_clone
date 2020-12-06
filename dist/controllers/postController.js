@@ -30,7 +30,7 @@ class PostController {
             });
         });
     }
-    fetchPostsByUserId(id, pageNo = 0, pageSize = 20) {
+    fetchSubsribedPostsByUserId(id, pageNo = 0, pageSize = 20) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             // Try to get memberlist from Redis first
             const res = yield redis_1.lrange(`${id}_membersList`, pageNo, pageSize);
@@ -40,11 +40,10 @@ class PostController {
                 return;
             }
             logger_1.default.info('read Sql');
-            let sqlQuery = 'select u.username, p.user_id, p.id as post_id, p.created_at, p.image_url, p.content from photos p ';
+            let sqlQuery = 'select u.username, p.user_id as userId, p.id as post_id, p.created_at, p.image_url, p.content from photos p ';
+            sqlQuery += `inner join (select id as pid from photos order by photos.created_at desc limit ${pageNo}, ${pageSize}) po on po.pid = p.id `;
             sqlQuery += 'inner join (select followee_id from follows where follower_id = ? ) f on f.followee_id = p.user_id ';
-            sqlQuery += 'left join users u on u.id = p.user_id ';
-            sqlQuery += 'order by p.created_at desc ';
-            sqlQuery += `LIMIT ${pageNo}, ${pageSize}`;
+            sqlQuery += 'left join users u on u.id = p.user_id';
             db_1.default(sqlQuery, [id], (err, rows) => __awaiter(this, void 0, void 0, function* () {
                 if (err) {
                     logger_1.default.error(err);
@@ -68,7 +67,8 @@ class PostController {
     }
     fetchUserPosts(id, pageNo = 0, pageSize = 10) {
         return new Promise((resolve, reject) => {
-            let sqlQuery = 'SELECT * FROM photos p WHERE user_id = ? ';
+            let sqlQuery = 'select p.id as postId, p.user_id, p.content, p.image_url, p.created_at FROM photos p ';
+            sqlQuery += 'force index (idx_createdAt) ';
             sqlQuery += 'ORDER BY p.created_at DESC ';
             sqlQuery += `limit ${pageNo}, ${pageSize}`;
             db_1.default(sqlQuery, [id], (err, rows) => {

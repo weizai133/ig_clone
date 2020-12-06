@@ -42,6 +42,16 @@ export const lrange = (key: string, start: number, end: number): Promise<Array<s
   })
 }
 
+export const rPush = (key: string, value: string | Array<string>): Promise<number | null> => {
+  return new Promise((resolve, reject) => {
+    redisClient.rpush(key, value, (err, res) => {
+      if (err) return reject(err);
+      return resolve(res)
+    })
+  })
+}
+
+
 export const sadd = (key: string, value: string) => {
   return new Promise((resolve, reject) => {
     redisClient.sadd(key, value, (err, res) => {

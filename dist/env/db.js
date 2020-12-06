@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.singleTransaction = exports.transactionCommit = exports.beginTransaction = exports.getConn = void 0;
+exports.singleTransaction = exports.transactionCommit = exports.doTransaction = exports.beginTransaction = exports.getConn = void 0;
 const mysql_1 = __importDefault(require("mysql"));
 const logger_1 = __importDefault(require("./logger"));
 const index_1 = __importDefault(require("./index"));
@@ -37,7 +37,18 @@ exports.getConn = () => {
         });
     });
 };
-exports.beginTransaction = (conn, sql, values) => {
+exports.beginTransaction = (conn) => {
+    return new Promise((resolve, reject) => {
+        conn.beginTransaction((err) => {
+            if (err) {
+                logger_1.default.error(err);
+                return reject(err);
+            }
+            resolve();
+        });
+    });
+};
+exports.doTransaction = (conn, sql, values) => {
     return new Promise((resolve, reject) => {
         conn.query(sql, values, (err, res) => {
             if (err) {
@@ -55,8 +66,11 @@ exports.transactionCommit = (conn) => {
         conn.commit((err) => {
             if (err) {
                 logger_1.default.error(err);
-                return reject(err);
+                conn.rollback(() => {
+                    return reject(err);
+                });
             }
+            logger_1.default.info("SUCCESSFUL COMMIT");
             return resolve();
         });
     });

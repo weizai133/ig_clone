@@ -5,7 +5,7 @@ export default interface PostService {
   /**
    * fetch posts on main page
    */
-  fetchPostsByUserId(id: string, pageNo?: number, pageSize?: number): Promise<Array<Fetch_Posts>>;
+  fetchSubsribedPostsByUserId(id: string, pageNo?: number, pageSize?: number): Promise<Array<Fetch_Posts>>;
   /**
    * fetch specific user's posts
    */

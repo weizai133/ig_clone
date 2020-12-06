@@ -53,13 +53,14 @@ class LikeController {
                 const likesColl = yield redis_1.smembers(LikeCollections);
                 (likesColl);
                 const sql = 'insert into likes set user_id = ?, photo_id = ?, created_at = ?;';
+                yield db_1.beginTransaction(conn);
                 likesColl.forEach((val) => __awaiter(this, void 0, void 0, function* () {
                     const nestedLock = yield redis_1.redlock.lock(`lock:${val}`, 1500);
                     const likeItemsFromRedis = yield redis_1.hkeys(val);
                     likeItemsFromRedis.map((el) => __awaiter(this, void 0, void 0, function* () {
                         const item = yield redis_1.hget(val, el);
                         let temp = JSON.parse(item);
-                        yield db_1.beginTransaction(conn, sql, [temp.user_id, temp.photo_id, temp.created_at]);
+                        yield db_1.doTransaction(conn, sql, [temp.user_id, temp.photo_id, temp.created_at]);
                     }));
                     yield nestedLock.unlock();
                 }));

@@ -37,7 +37,20 @@ export const getConn = (): Promise<PoolConnection> => {
 	})
 }
 
-export const beginTransaction = (conn: PoolConnection, sql: string, values: string | string[]): Promise<any> => {
+export const beginTransaction = (conn: PoolConnection) => {
+	return new Promise((resolve, reject) => {
+		conn.beginTransaction((err) => {
+			if (err) {
+				logger.error(err);
+				return reject(err);
+			}
+
+			resolve()
+		})
+	})
+}
+
+export const doTransaction = (conn: PoolConnection, sql: string, values: string | string[]): Promise<any> => {
 	return new Promise((resolve, reject) => {
 		conn.query(sql, values, (err, res) => {
 			if (err) {
@@ -56,8 +69,11 @@ export const transactionCommit = (conn: PoolConnection) => {
 		conn.commit((err) => {
 			if (err) {
 				logger.error(err);
-				return reject(err);
+				conn.rollback(() => {
+					return reject(err);
+				})
 			}
+			logger.info("SUCCESSFUL COMMIT");
 			return resolve();
 		});
 	})

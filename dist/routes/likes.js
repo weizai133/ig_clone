@@ -20,7 +20,7 @@ router.post('/', (req, res) => {
 });
 router.post('/testBulkInsert/:postId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        yield LikeCtrl.bulkInsertlikes(req.params.postId, 60);
+        yield LikeCtrl.bulkInsertlikes(req.params.postId, 2);
         yield LikeCtrl.insertLikesToDB();
         res.status(200).send('ok');
     }

@@ -19,7 +19,7 @@ export default class PostController implements PostServices {
     })
   }
 
-  fetchPostsByUserId(id: string, pageNo = 0, pageSize = 20 ): Promise<Array<Fetch_Posts>> {
+  fetchSubsribedPostsByUserId(id: string, pageNo = 0, pageSize = 20 ): Promise<Array<Fetch_Posts>> {
     return new Promise(async (resolve, reject) => {
       // Try to get memberlist from Redis first
       const res = await lrange(`${id}_membersList`, pageNo, pageSize);
@@ -29,11 +29,10 @@ export default class PostController implements PostServices {
         return
       }
       logger.info('read Sql')
-      let sqlQuery = 'select u.username, p.user_id, p.id as post_id, p.created_at, p.image_url, p.content from photos p ';
+      let sqlQuery = 'select u.username, p.user_id as userId, p.id as post_id, p.created_at, p.image_url, p.content from photos p ';
+      sqlQuery += `inner join (select id as pid from photos order by photos.created_at desc limit ${pageNo}, ${pageSize}) po on po.pid = p.id `;
       sqlQuery += 'inner join (select followee_id from follows where follower_id = ? ) f on f.followee_id = p.user_id ';
-      sqlQuery += 'left join users u on u.id = p.user_id ';
-      sqlQuery += 'order by p.created_at desc ';
-      sqlQuery += `LIMIT ${pageNo}, ${pageSize}`;
+      sqlQuery += 'left join users u on u.id = p.user_id';
 
       query(sqlQuery, [id], async (err: Error, rows: Array<Fetch_Posts>) => {
         if (err) {
@@ -55,7 +54,8 @@ export default class PostController implements PostServices {
 
   fetchUserPosts(id: string, pageNo = 0, pageSize = 10): Promise<Array<Post>> {
     return new Promise((resolve, reject) => {
-      let sqlQuery: string = 'SELECT * FROM photos p WHERE user_id = ? ';
+      let sqlQuery: string = 'select p.id as postId, p.user_id, p.content, p.image_url, p.created_at FROM photos p ';
+      sqlQuery += 'force index (idx_createdAt) '
       sqlQuery += 'ORDER BY p.created_at DESC ';
       sqlQuery += `limit ${pageNo}, ${pageSize}`;
 

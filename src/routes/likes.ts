@@ -12,7 +12,7 @@ router.post('/', (req: Request, res: Response) => {
 
 router.post('/testBulkInsert/:postId', async (req: Request, res: Response) => {
   try {
-    await LikeCtrl.bulkInsertlikes(req.params.postId, 60);
+    await LikeCtrl.bulkInsertlikes(req.params.postId, 2);
     await LikeCtrl.insertLikesToDB();
     res.status(200).send('ok')
   } catch (error) {

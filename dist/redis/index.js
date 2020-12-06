@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.srem = exports.hdel = exports.hget = exports.hkeys = exports.hexists = exports.expire = exports.hmset = exports.sismember = exports.smembers = exports.sadd = exports.lrange = exports.lPush = exports.setValue = exports.getValue = exports.redlock = exports.redisClient = void 0;
+exports.srem = exports.hdel = exports.hget = exports.hkeys = exports.hexists = exports.expire = exports.hmset = exports.sismember = exports.smembers = exports.sadd = exports.rPush = exports.lrange = exports.lPush = exports.setValue = exports.getValue = exports.redlock = exports.redisClient = void 0;
 const redis_1 = __importDefault(require("redis"));
 const redlock_1 = __importDefault(require("redlock"));
 const logger_1 = __importDefault(require("../env/logger"));
@@ -38,6 +38,15 @@ exports.lrange = (key, start, end) => {
         exports.redisClient.lrange(key, start, end, (err, res) => {
             if (err)
                 return reject(null);
+            return resolve(res);
+        });
+    });
+};
+exports.rPush = (key, value) => {
+    return new Promise((resolve, reject) => {
+        exports.redisClient.rpush(key, value, (err, res) => {
+            if (err)
+                return reject(err);
             return resolve(res);
         });
     });
