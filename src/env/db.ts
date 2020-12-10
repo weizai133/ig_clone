@@ -7,6 +7,7 @@ type queryOptions = object | Array<string> | null | undefined | Function
 var pool = mysql.createPool({ ...config.database });
 
 const query = (sql: string, options: queryOptions, callback: Function) =>{
+	logger.info(sql);
 	if (typeof options === "function") {
 		callback = options;
 		options = undefined;

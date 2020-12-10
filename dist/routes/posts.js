@@ -7,8 +7,8 @@ const express_1 = require("express");
 const postController_1 = __importDefault(require("../controllers/postController"));
 const router = express_1.Router();
 const postsController = new postController_1.default();
-router.get('/fetchPosts/:userId', (req, res) => {
-    postsController.fetchSubsribedPostsByUserId(req.params.userId, req.query.pageNo, req.query.pageSize)
+router.get('/fetchSubscribedPosts/:userId', (req, res) => {
+    postsController.fetchSubsribedPostsByUserId(req.params.userId, req.query.lastPostId)
         .then(result => { return res.status(200).json({ success: true, result }); })
         .catch(error => { return res.status(400).json({ success: false, error }); });
 });

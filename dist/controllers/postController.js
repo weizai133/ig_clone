@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../env/db"));
 const logger_1 = __importDefault(require("../env/logger"));
-const redis_1 = require("../redis");
+// import { lrange } from "../redis";
 const utils_1 = require("../utils");
 class PostController {
     createPost(newPost) {
@@ -30,21 +30,17 @@ class PostController {
             });
         });
     }
-    fetchSubsribedPostsByUserId(id, pageNo = 0, pageSize = 20) {
+    fetchSubsribedPostsByUserId(id, lastPostId) {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            // Try to get memberlist from Redis first
-            const res = yield redis_1.lrange(`${id}_membersList`, pageNo, pageSize);
-            if (res && res.length > 0) {
-                logger_1.default.info('Read Redis');
-                resolve(res.map(val => (Object.assign({}, JSON.parse(val)))));
-                return;
-            }
+            const limitNum = 20;
             logger_1.default.info('read Sql');
             let sqlQuery = 'select u.username, p.user_id as userId, p.id as post_id, p.created_at, p.image_url, p.content from photos p ';
-            sqlQuery += `inner join (select id as pid from photos order by photos.created_at desc limit ${pageNo}, ${pageSize}) po on po.pid = p.id `;
-            sqlQuery += 'inner join (select followee_id from follows where follower_id = ? ) f on f.followee_id = p.user_id ';
-            sqlQuery += 'left join users u on u.id = p.user_id';
-            db_1.default(sqlQuery, [id], (err, rows) => __awaiter(this, void 0, void 0, function* () {
+            sqlQuery += `inner join (select followee_id from follows where follower_id = ${id} ) f on f.followee_id = p.user_id `;
+            sqlQuery += 'inner join users u on u.id = p.user_id ';
+            if (!!lastPostId)
+                sqlQuery += `where p.id < ${lastPostId} and p.id >= ${lastPostId - limitNum} `;
+            sqlQuery += `order by p.id desc limit ${limitNum}`;
+            db_1.default(sqlQuery, [], (err, rows) => __awaiter(this, void 0, void 0, function* () {
                 if (err) {
                     logger_1.default.error(err);
                     reject(err);
@@ -68,10 +64,10 @@ class PostController {
     fetchUserPosts(id, pageNo = 0, pageSize = 10) {
         return new Promise((resolve, reject) => {
             let sqlQuery = 'select p.id as postId, p.user_id, p.content, p.image_url, p.created_at FROM photos p ';
-            sqlQuery += 'force index (idx_createdAt) ';
+            sqlQuery += `where p.user_id = ${id} `;
             sqlQuery += 'ORDER BY p.created_at DESC ';
             sqlQuery += `limit ${pageNo}, ${pageSize}`;
-            db_1.default(sqlQuery, [id], (err, rows) => {
+            db_1.default(sqlQuery, [], (err, rows) => {
                 if (err) {
                     logger_1.default.error(err);
                     reject(err);
@@ -88,9 +84,9 @@ class PostController {
         return new Promise((resolve, reject) => {
             let sqlQuery = 'SELECT c.id AS comment_id, users.id AS user_id, users.username, c.comment_text, c.photo_id, c.user_id, c.created_at FROM comments c ';
             sqlQuery += 'LEFT JOIN users ON c.user_id = users.id ';
-            sqlQuery += 'WHERE c.photo_id = ? ';
+            sqlQuery += `WHERE c.photo_id = ${id} `;
             sqlQuery += `LIMIT ${pageNo}, ${pageSize};`;
-            db_1.default(sqlQuery, [id], (err, rows) => {
+            db_1.default(sqlQuery, [], (err, rows) => {
                 if (err) {
                     logger_1.default.error(err);
                     reject(err);

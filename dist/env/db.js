@@ -9,6 +9,7 @@ const logger_1 = __importDefault(require("./logger"));
 const index_1 = __importDefault(require("./index"));
 var pool = mysql_1.default.createPool(Object.assign({}, index_1.default.database));
 const query = (sql, options, callback) => {
+    logger_1.default.info(sql);
     if (typeof options === "function") {
         callback = options;
         options = undefined;
